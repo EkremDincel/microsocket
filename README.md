@@ -1,6 +1,6 @@
 # microsocket
 
-A thin yet convenient wrapper for the builtin ``socket`` library.
+A thin yet convenient wrapper for the builtin ``socket`` library. Comes with both sync and async versions.
 
 ## Examples
 
