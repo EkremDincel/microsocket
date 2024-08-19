@@ -17,7 +17,7 @@ class AsyncServer(AsyncSelectWrapper, microsocket.Server):
     async def accept(self):
         """Accept a client and return it."""
         await self.wait_until(self.isreadable)
-        return AcceptedClient(*self.socket.accept())
+        return AsyncAcceptedClient(*self.socket.accept())
 
 
 class AsyncBaseClient(AsyncSelectWrapper, microsocket.BaseClient):
