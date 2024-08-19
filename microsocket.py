@@ -1,11 +1,13 @@
-import pickle as json
-import json
 import socket
 from struct import Struct, calcsize
 from select import select
 from time import sleep
 
-__all__ = ("Server", "Client", "localhostname", "localhost", "LAN", "WAN")
+import json
+SERIALIZER = json.dumps
+DESERIALIZER = json.loads
+
+__all__ = ("Server", "Client", "hostname", "host", "LOCALHOST", "LAN", "WAN", "SERIALIZER", "DESERIALIZER", "BroadcastListener", "Broadcaster")
 
 _int = "H" # 0 <= number <= 65535 == 2 ** 16 -1
 _size = calcsize(_int)
@@ -16,11 +18,11 @@ del Struct, calcsize # clear namespace
 hostname = socket.gethostname()
 host = socket.gethostbyname(hostname)
 
-HOST = "localhost" # local device
+LOCALHOST = "localhost" # local device
 LAN = host # local area network
 WAN = "" # wide area network 
 
-class BaseSocket(): # isim önerilerine açığım
+class BaseSocket():
 
     def __init__(self):
         self.socket = socket.socket()
@@ -100,13 +102,13 @@ class BaseClient(SelectWrapper):
 
     def send_obj(self, obj):
         """Send an object to the other socket."""
-        bytes_to_send = json.dumps(obj).encode()
+        bytes_to_send = SERIALIZER(obj).encode()
         self._safe_send(_struct.pack(len(bytes_to_send)) + bytes_to_send)
 
     def recv_obj(self, block = False):
         """Receive an object from the other socket."""
         lenght = _struct.unpack(self._safe_recv(_size))[0]
-        return json.loads(self._safe_recv(lenght, block).decode())
+        return DESERIALIZER(self._safe_recv(lenght, block).decode())
         
 
 class AcceptedClient(BaseClient, BaseSocket):
@@ -122,6 +124,7 @@ class Client(BaseClient, BaseSocket):
     def connect(self, address):
         """Connect to the server."""
         self.socket.connect(address)
+
 
 class BroadcastListener:
     def __init__(self):
@@ -142,7 +145,8 @@ class BroadcastListener:
                 except ValueError:
                     pass
         return self.ips
-    
+
+
 class Broadcaster:
     def __init__(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
