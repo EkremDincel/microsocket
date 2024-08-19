@@ -1,9 +1,17 @@
 import microsocket
+import socket
 
 import asyncio
 YIELD_TO_LOOP = lambda: asyncio.sleep(0)
 
 __all__ = ["AsyncServer", "AsyncClient", "YIELD_TO_LOOP"]
+
+class AsyncBaseSocket(microsocket.BaseSocket):
+
+    def __init__(self):
+        self.socket = socket.socket()
+        self.socket.setblocking(False)
+
 
 class AsyncSelectWrapper(microsocket.SelectWrapper):
 
@@ -12,7 +20,7 @@ class AsyncSelectWrapper(microsocket.SelectWrapper):
             await YIELD_TO_LOOP()
 
 
-class AsyncServer(AsyncSelectWrapper, microsocket.Server):
+class AsyncServer(AsyncBaseSocket, AsyncSelectWrapper, microsocket.Server):
 
     async def accept(self):
         """Accept a client and return it."""
@@ -20,7 +28,7 @@ class AsyncServer(AsyncSelectWrapper, microsocket.Server):
         return AsyncAcceptedClient(*self.socket.accept())
 
 
-class AsyncBaseClient(AsyncSelectWrapper, microsocket.BaseClient):
+class AsyncBaseClient(AsyncBaseSocket, AsyncSelectWrapper, microsocket.BaseClient):
 
     async def _safe_send(self, msg):
         totalsent = 0
@@ -63,6 +71,28 @@ class AsyncAcceptedClient(AsyncBaseClient, microsocket.AcceptedClient):
 class AsyncClient(AsyncBaseClient, microsocket.Client):
     """Client class for connecting to the server."""
 
-    async def connect(self, address): # TODO: how connect asynchronously?
+    async def connect(self, address):
         """Connect to the server."""
-        self.socket.connect(address)
+        while True:
+            try:
+                self.socket.connect(address)
+            except BlockingIOError:
+                pass
+            await YIELD_TO_LOOP()
+
+
+if __name__ == "__main__":
+    async def display():
+        anim = "|/-\\"
+        x = 0
+        while True:
+            print(f"\r[{anim[x]}]", end = "")
+            x += 1
+            x %= len(anim)
+            await asyncio.sleep(0.25)
+
+    async def main():
+        asyncio.create_task(display())
+        await AsyncClient().connect(("", 8000))
+
+    asyncio.run(main())

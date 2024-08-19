@@ -75,7 +75,7 @@ class Server(BaseSocket, SelectWrapper):
         return AcceptedClient(*self.socket.accept())
         
 
-class BaseClient(SelectWrapper):
+class BaseClient(BaseSocket, SelectWrapper):
 
     def _safe_send(self, msg):
         totalsent = 0
@@ -111,14 +111,14 @@ class BaseClient(SelectWrapper):
         return DESERIALIZER(self._safe_recv(lenght, block).decode())
         
 
-class AcceptedClient(BaseClient, BaseSocket):
+class AcceptedClient(BaseClient):
 
     def __init__(self, socket, addr):
         self.addr = addr
         self.socket = socket
 
 
-class Client(BaseClient, BaseSocket):
+class Client(BaseClient):
     """Client class for connecting to the server."""
 
     def connect(self, address):
