@@ -1,5 +1,8 @@
 import socket
-from . import microsocket
+try:
+    from . import microsocket
+except ImportError:
+    import microsocket
 
 import asyncio
 YIELD_TO_LOOP = lambda: asyncio.sleep(0)
@@ -75,7 +78,7 @@ class AsyncClient(AsyncBaseClient, microsocket.Client):
         """Connect to the server."""
         while True:
             try:
-                self.socket.connect(address)
+                self.socket.connect(address) # use settimeout instead?
             except BlockingIOError:
                 pass
             await YIELD_TO_LOOP()
