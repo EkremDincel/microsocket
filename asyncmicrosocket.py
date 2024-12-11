@@ -1,5 +1,5 @@
-import microsocket
 import socket
+from . import microsocket
 
 import asyncio
 YIELD_TO_LOOP = lambda: asyncio.sleep(0)
