@@ -42,7 +42,7 @@ class AsyncBaseClient(AsyncBaseSocket, AsyncSelectWrapper, microsocket.BaseClien
 				raise ConnectionError("Socket connection is broken.")
 			await YIELD_TO_LOOP()
 
-	async def _safe_recv(self, lenght, block=False):
+	async def _safe_recv(self, lenght):
 		return_value = b""
 		bytes_recd = 0
 		while bytes_recd < lenght:
@@ -60,10 +60,10 @@ class AsyncBaseClient(AsyncBaseSocket, AsyncSelectWrapper, microsocket.BaseClien
 		bytes_to_send = SERIALIZER(obj).encode()
 		await self._safe_send(_struct.pack(len(bytes_to_send)) + bytes_to_send)
 
-	async def recv_obj(self, block=False):
+	async def recv_obj(self):
 		"""Receive an object from the other socket."""
 		lenght = _struct.unpack(self._safe_recv(_size))[0]
-		return DESERIALIZER(await self._safe_recv(lenght, block).decode())
+		return DESERIALIZER(await self._safe_recv(lenght).decode())
 
 
 class AsyncAcceptedClient(AsyncBaseClient, microsocket.AcceptedClient):
