@@ -26,7 +26,7 @@ _int = "H"  # 0 <= number <= 65535 == 2 ** 16 -1
 _size = calcsize(_int)
 _struct = Struct("!" + _int)
 
-del Struct, calcsize  # clear namespace
+del Struct, calcsize, _int  # clear namespace
 
 hostname = socket.gethostname()
 host = socket.gethostbyname(hostname)

@@ -7,6 +7,11 @@ except ImportError:
 
 import asyncio
 
+SERIALIZER = microsocket.SERIALIZER
+DESERIALIZER = microsocket.DESERIALIZER
+_struct = microsocket._struct
+_size = microsocket._size
+
 YIELD_TO_LOOP = lambda: asyncio.sleep(0)
 
 __all__ = ["AsyncServer", "AsyncClient", "YIELD_TO_LOOP"]
@@ -15,7 +20,7 @@ __all__ = ["AsyncServer", "AsyncClient", "YIELD_TO_LOOP"]
 class AsyncBaseSocket(microsocket.BaseSocket):
 	def __init__(self):
 		self.socket = socket.socket()
-		self.socket.setblocking(False)
+		# self.socket.setblocking(False)
 
 
 class AsyncSelectWrapper(microsocket.SelectWrapper):
@@ -62,11 +67,11 @@ class AsyncBaseClient(AsyncBaseSocket, AsyncSelectWrapper, microsocket.BaseClien
 
 	async def recv_obj(self):
 		"""Receive an object from the other socket."""
-		lenght = _struct.unpack(self._safe_recv(_size))[0]
-		return DESERIALIZER(await self._safe_recv(lenght).decode())
+		lenght = _struct.unpack(await self._safe_recv(_size))[0]
+		return DESERIALIZER((await self._safe_recv(lenght)).decode())
 
 
-class AsyncAcceptedClient(AsyncBaseClient, microsocket.AcceptedClient):
+class AsyncAcceptedClient(microsocket.AcceptedClient, AsyncBaseClient):
 	pass
 
 
@@ -75,7 +80,7 @@ class AsyncClient(AsyncBaseClient, microsocket.Client):
 
 	async def connect(self, address):
 		"""Connect to the server."""
-		while True:
+		while not self.iswritable():  # Note: BlockingIOError doesn't mean that the connection hasn't happened
 			try:
 				self.socket.connect(address)  # use settimeout instead?
 			except BlockingIOError:
