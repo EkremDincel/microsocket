@@ -21,6 +21,7 @@ class AsyncBaseSocket(microsocket.BaseSocket):
 	def __init__(self):
 		self.socket = socket.socket()
 		# self.socket.setblocking(False)
+		# self.socket.settimeout(0)
 
 
 class AsyncSelectWrapper(microsocket.SelectWrapper):
